@@ -1,6 +1,7 @@
 ﻿using BlackJack21.Data;
 using BlackJack21.Models;
 using BlackJack21.Services.Abstractions;
+using BlackJack21.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -17,7 +18,7 @@ namespace BlackJack21.Services
         }
         
         
-        //Initializes Game and Deck Structur for the game 
+        //Initializes Game and Deck Structure for the game 
         public async Task<int> StartGameAsync()
         {
             //Initialize game
@@ -26,6 +27,9 @@ namespace BlackJack21.Services
             var playerHand = new Hand { Type = "Player", Game = newGame };
             var dealerHand = new Hand { Type = "Dealer", Game = newGame };
 
+            newGame.Hands.Add(deckHand);
+            newGame.Hands.Add(playerHand);
+            newGame.Hands.Add(dealerHand);
 
             //Create cards
             string[] suits = { "Hearts", "Diamonds", "Clubs", "Spades" };
@@ -54,6 +58,8 @@ namespace BlackJack21.Services
 
             _db.Games.Add(newGame);
             await _db.SaveChangesAsync();
+
+            await InitialDrawAsync(newGame.Id);
             return newGame.Id;
         }
 
@@ -91,24 +97,46 @@ namespace BlackJack21.Services
         //The first sequence of draws that will happen automaticly
         public async Task InitialDrawAsync(int GameId)
         {
-            //Draw card from the draw deck and put it at the player hand
-            var firstcard = await DrawCardAsync(GameId, await FindHandId(GameId, "Player"));
             
-            var secondcard = await DrawCardAsync(GameId, await FindHandId(GameId, "Dealer"));
+            //Get Hand Ids
+            var playerDeckId = await FindHandId(GameId, "Player");
+            var dealerDeckId = await FindHandId(GameId, "Dealer");
+            
+            //Draw card from the draw deck and put it at the player/dealer hand
+            
+            var firstcard = await DrawCardAsync(GameId, playerDeckId);
+            
+            var secondcard = await DrawCardAsync(GameId, dealerDeckId);
 
-            var thirdcard = await DrawCardAsync(GameId, await FindHandId(GameId, "Player"));
+            var thirdcard = await DrawCardAsync(GameId, playerDeckId);
 
-            var fourthcard = await DrawCardAsync(GameId, await FindHandId(GameId, "Dealer"));
+            var fourthcard = await DrawCardAsync(GameId, dealerDeckId);
 
         }
     
-    
-    
-    
-    
-    
-    
-    
+        public async Task<GameViewModel> GetGameDetailsAsync(int GameId)
+        {
+            var dealerHand = await _db.Hands
+               .Include(p => p.Cards)
+               .FirstOrDefaultAsync(p => p.GameId == GameId && p.Type == "Dealer");
+
+            var playerHand = await _db.Hands
+                .Include(p => p.Cards)
+                .FirstOrDefaultAsync(p => p.GameId == GameId && p.Type == "Player");
+
+            return new GameViewModel
+            {
+                playerhand = playerHand,
+                dealerhand = dealerHand
+            };
+       
+        }
+
+
+
+
+
+
     }
 }
 

@@ -1,0 +1,76 @@
+﻿/* Custom Blackjack Casino Theme */
+
+body.blackjack-theme {
+    background: radial-gradient(circle, #1a4a3a 0%, #0d241c 100%);
+    color: #fff;
+    min-height: 100vh;
+}
+
+.blackjack-table {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 150px / 20px;
+    padding: 40px;
+    margin-top: 20px;
+}
+
+/* Hand Areas */
+.hand-container {
+    min-height: 200px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 15px;
+    padding: 25px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Card Styling */
+.playing-card {
+    width: 110px;
+    height: 160px;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+    transition: transform 0.2s ease-in-out;
+    user-select: none;
+}
+
+    .playing-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .playing-card.red {
+        color: #dc3545;
+    }
+
+    .playing-card.black {
+        color: #212529;
+    }
+
+    .playing-card.hidden {
+        background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%);
+        border: 3px solid white;
+        color: white;
+        justify-content: center;
+        align-items: center;
+    }
+
+.suit-large {
+    font-size: 2.5rem;
+    align-self: center;
+    line-height: 1;
+}
+
+/* Controls */
+.action-panel {
+    background: rgba(33, 37, 41, 0.8);
+    padding: 20px;
+    border-radius: 50px;
+    border: 1px solid #495057;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}

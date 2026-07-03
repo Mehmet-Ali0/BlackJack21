@@ -1,0 +1,83 @@
+﻿@using BlackJack21.ViewModels
+@model GameViewModel
+
+@{
+    ViewData["Title"] = "Blackjack Table";
+}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
+        <h1 class="fw-bold text-warning mb-0">♣ Blackjack 21 ♦</h1>
+        <span class="badge bg-dark fs-6 border border-secondary">Game ID: #@Model.playerhand.GameId</span>
+    </div>
+
+    <div class="blackjack-table shadow-lg">
+
+        <div class="mb-5">
+            <h4 class="mb-3 text-light"><span class="badge bg-danger me-2">Dealer</span> Dealer's Hand</h4>
+            <div class="hand-container">
+                @for (int i = 0; i < Model.dealerhand.Cards.Count; i++)
+                {
+                    var card = Model.dealerhand.Cards[i];
+
+                    if (i == 0)
+                    {
+                        var isRed = card.Suit == "Hearts" || card.Suit == "Diamonds";
+                        var suitSymbol = card.Suit == "Hearts" ? "♥" : card.Suit == "Diamonds" ? "♦" : card.Suit == "Clubs" ? "♣" : "♠";
+
+                        <div class="playing-card @(isRed ? "red" : "black")">
+                            <div class="fw-bold fs-5 text-start">@card.Rank</div>
+                            <div class="suit-large">@suitSymbol</div>
+                            <div class="fw-bold fs-5 text-end rotate-180">@card.Rank</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="playing-card hidden">
+                            <div class="fs-1 fw-bold opacity-50">?</div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h4 class="mb-3 text-light"><span class="badge bg-primary me-2">Player</span> Your Hand</h4>
+            <div class="hand-container">
+                @foreach (var card in Model.playerhand.Cards)
+                {
+                    var isRed = card.Suit == "Hearts" || card.Suit == "Diamonds";
+                    var suitSymbol = card.Suit == "Hearts" ? "♥" : card.Suit == "Diamonds" ? "♦" : card.Suit == "Clubs" ? "♣" : "♠";
+
+                    <div class="playing-card @(isRed ? "red" : "black")">
+                        <div class="fw-bold fs-5 text-start">@card.Rank</div>
+                        <div class="suit-large">@suitSymbol</div>
+                        <div class="fw-bold fs-5 text-end">@card.Rank</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-6 action-panel text-center">
+            <div class="d-flex justify-content-center gap-4">
+
+                <form asp-action="Hit" method="post" asp-route-id="@Model.playerhand.GameId">
+                    <button type="submit" class="btn btn-warning btn-lg px-5 fw-bold rounded-pill text-dark">
+                        💥 Hit
+                    </button>
+                </form>
+
+                <form asp-action="Stand" method="post" asp-route-id="@Model.playerhand.GameId">
+                    <button type="submit" class="btn btn-danger btn-lg px-5 fw-bold rounded-pill">
+                        🛑 Stand
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
