@@ -112,16 +112,39 @@ namespace BlackJack21.Services
 
             var fourthcard = await DrawCardAsync(GameId, dealerDeckId);
 
+            //Natural 21 Case
+            int initialPlayerScore = await CalculateScoreAsync(GameId, "Player");
+            int initialDealerScore = await CalculateScoreAsync(GameId, "Dealer");
+
+            if (initialPlayerScore == 21 || initialDealerScore == 21)
+            {
+                var game = await _db.Games.FindAsync(GameId);
+                if (game != null)
+                {
+                    game.IsFinished = true; // Lock the game instantly
+                    await _db.SaveChangesAsync();
+                }
+            }
+
+
+
+
+
+
+
         }
     
+        //Sending the hands to the viewmodel
         public async Task<GameViewModel> GetGameDetailsAsync(int GameId)
         {
             var dealerHand = await _db.Hands
                .Include(p => p.Cards)
+               .Include(p => p.Game)
                .FirstOrDefaultAsync(p => p.GameId == GameId && p.Type == "Dealer");
 
             var playerHand = await _db.Hands
                 .Include(p => p.Cards)
+                .Include(p => p.Game)
                 .FirstOrDefaultAsync(p => p.GameId == GameId && p.Type == "Player");
 
             return new GameViewModel
@@ -130,6 +153,95 @@ namespace BlackJack21.Services
                 dealerhand = dealerHand
             };
        
+        }
+        
+        public async Task<int> CalculateScoreAsync(int GameId, string HandType)
+        {
+            var hand = await _db.Hands
+                .Include(p => p.Cards)
+                .Where(p => p.GameId == GameId && p.Type == HandType)
+                .FirstOrDefaultAsync();
+
+            int score = 0;
+            int aceCount = 0;
+           
+            //Calculate card scores
+            foreach(var card in hand.Cards)
+            {
+                if(card.Rank == "Jack" || card.Rank == "Queen" || card.Rank == "King")
+                {
+                    score = score + 10;
+                }
+                else if(card.Rank == "Ace")
+                {
+                    score += 11;
+                    aceCount++;
+                }
+                else
+                {
+                    score += int.Parse(card.Rank);
+                }
+            }
+            
+            //Handling Ace condition as both 11 and 1
+            while(score > 21 && aceCount > 0)
+            {
+                score = score - 10;
+                aceCount--;
+            }
+
+            return score; 
+        }
+
+        public async Task<int> PlayerHitAsync(int GameId)
+        {
+            var playerHandId = await FindHandId(GameId, "Player");
+            
+            //Draw a card from the deck to the player hand
+            var card = await DrawCardAsync(GameId, playerHandId);
+            
+            //Get the score
+            var score = await CalculateScoreAsync(GameId, "Player");
+
+            if(score > 21)
+            {
+                var game = await _db.Games.FindAsync(GameId);
+                if(game != null)
+                {
+                    game.IsFinished = true;
+                    await _db.SaveChangesAsync();
+                }
+            }
+
+            return score;
+
+        }
+
+        public async Task<string> DealerHitAsync(int GameId)
+        {
+            var dealerHandId = await FindHandId(GameId, "Dealer");
+            var dealerScore = await CalculateScoreAsync(GameId, "Dealer");
+
+            while(dealerScore < 17)
+            {
+                var card = await DrawCardAsync(GameId, dealerHandId);
+                dealerScore = await CalculateScoreAsync(GameId, "Dealer");
+            }
+
+           
+            int playerScore = await CalculateScoreAsync(GameId, "Player");
+            var game = await _db.Games.FindAsync(GameId);
+            if(game != null)
+            {
+                game.IsFinished = true;
+                await _db.SaveChangesAsync();
+            }
+
+            if (dealerScore > 21) return "Dealer Busts! You Win!";
+            if (playerScore > dealerScore) return "You Win!";
+            if (dealerScore > playerScore) return "Dealer Wins.";
+
+            return "It's a tie.";
         }
 
 

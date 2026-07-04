@@ -3,6 +3,10 @@
 
 @{
     ViewData["Title"] = "Blackjack Table";
+
+    // Check if the game is over by seeing if the backend sent us a result message
+    var gameResult = TempData["GameResult"]?.ToString();
+    bool isGameOver = !string.IsNullOrEmpty(gameResult);
 }
 
 <div class="container py-4">
@@ -11,6 +15,13 @@
         <h1 class="fw-bold text-warning mb-0">♣ Blackjack 21 ♦</h1>
         <span class="badge bg-dark fs-6 border border-secondary">Game ID: #@Model.playerhand.GameId</span>
     </div>
+
+    @if (isGameOver)
+    {
+        <div class="alert alert-info text-center fs-3 fw-bold mb-4 shadow border border-info">
+            @gameResult
+        </div>
+    }
 
     <div class="blackjack-table shadow-lg">
 
@@ -21,7 +32,8 @@
                 {
                     var card = Model.dealerhand.Cards[i];
 
-                    if (i == 0)
+                    // REVEAL LOGIC: Show the first card, OR show all cards if the game is over
+                    if (i == 0 || isGameOver)
                     {
                         var isRed = card.Suit == "Hearts" || card.Suit == "Diamonds";
                         var suitSymbol = card.Suit == "Hearts" ? "♥" : card.Suit == "Diamonds" ? "♦" : card.Suit == "Clubs" ? "♣" : "♠";
@@ -65,17 +77,28 @@
         <div class="col-md-6 action-panel text-center">
             <div class="d-flex justify-content-center gap-4">
 
-                <form asp-action="Hit" method="post" asp-route-id="@Model.playerhand.GameId">
-                    <button type="submit" class="btn btn-warning btn-lg px-5 fw-bold rounded-pill text-dark">
-                        💥 Hit
-                    </button>
-                </form>
+                @if (!isGameOver)
+                {
+                    <form asp-controller="BlackJack" asp-action="Hit" method="post" asp-route-id="@Model.playerhand.GameId">
+                        <button type="submit" class="btn btn-warning btn-lg px-5 fw-bold rounded-pill text-dark shadow-sm">
+                            💥 Hit
+                        </button>
+                    </form>
 
-                <form asp-action="Stand" method="post" asp-route-id="@Model.playerhand.GameId">
-                    <button type="submit" class="btn btn-danger btn-lg px-5 fw-bold rounded-pill">
-                        🛑 Stand
-                    </button>
-                </form>
+                    <form asp-controller="BlackJack" asp-action="Stand" method="post" asp-route-id="@Model.playerhand.GameId">
+                        <button type="submit" class="btn btn-danger btn-lg px-5 fw-bold rounded-pill shadow-sm">
+                            🛑 Stand
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-controller="BlackJack" asp-action="Start" method="post">
+                        <button type="submit" class="btn btn-success btn-lg px-5 fw-bold rounded-pill shadow-lg border border-light">
+                            🔄 Play Again
+                        </button>
+                    </form>
+                }
 
             </div>
         </div>
