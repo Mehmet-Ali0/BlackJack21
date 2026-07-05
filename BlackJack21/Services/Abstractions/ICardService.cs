@@ -15,8 +15,8 @@ namespace BlackJack21.Services.Abstractions
        Task<GameViewModel> GetGameDetailsAsync(int GameId);
        Task<int> PlayerHitAsync(int gameId);
        Task<string> DealerHitAsync(int GameId);
-
+        Task HandSplit(int GameId);
         Task<int> CalculateScoreAsync(int GameId, string HandType);
-
+        Task<int> CalculateScoreByHandIdAsync(int handId);
     }
 }

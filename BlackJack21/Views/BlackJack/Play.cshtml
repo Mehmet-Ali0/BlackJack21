@@ -4,16 +4,21 @@
 @{
     ViewData["Title"] = "Blackjack Table";
 
-    // Check if the game is over by seeing if the backend sent us a result message
     var gameResult = TempData["GameResult"]?.ToString();
     bool isGameOver = !string.IsNullOrEmpty(gameResult);
+
+    // Find the hand we are currently playing to check if we can split
+    var activeHand = Model.playerhands.FirstOrDefault(h => h.Id == Model.ActiveHandId);
+    bool canSplit = activeHand != null &&
+                    activeHand.Cards.Count == 2 &&
+                    activeHand.Cards[0].Rank == activeHand.Cards[1].Rank;
 }
 
 <div class="container py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
         <h1 class="fw-bold text-warning mb-0">♣ Blackjack 21 ♦</h1>
-        <span class="badge bg-dark fs-6 border border-secondary">Game ID: #@Model.playerhand.GameId</span>
+        <span class="badge bg-dark fs-6 border border-secondary">Game ID: #@Model.GameId</span>
     </div>
 
     @if (isGameOver)
@@ -32,7 +37,6 @@
                 {
                     var card = Model.dealerhand.Cards[i];
 
-                    // REVEAL LOGIC: Show the first card, OR show all cards if the game is over
                     if (i == 0 || isGameOver)
                     {
                         var isRed = card.Suit == "Hearts" || card.Suit == "Diamonds";
@@ -55,17 +59,34 @@
         </div>
 
         <div class="mb-4">
-            <h4 class="mb-3 text-light"><span class="badge bg-primary me-2">Player</span> Your Hand</h4>
-            <div class="hand-container">
-                @foreach (var card in Model.playerhand.Cards)
+            <div class="row">
+                @for (int i = 0; i < Model.playerhands.Count; i++)
                 {
-                    var isRed = card.Suit == "Hearts" || card.Suit == "Diamonds";
-                    var suitSymbol = card.Suit == "Hearts" ? "♥" : card.Suit == "Diamonds" ? "♦" : card.Suit == "Clubs" ? "♣" : "♠";
+                    var hand = Model.playerhands[i];
+                    bool isActive = hand.Id == Model.ActiveHandId && !isGameOver;
 
-                    <div class="playing-card @(isRed ? "red" : "black")">
-                        <div class="fw-bold fs-5 text-start">@card.Rank</div>
-                        <div class="suit-large">@suitSymbol</div>
-                        <div class="fw-bold fs-5 text-end">@card.Rank</div>
+                    <div class="col-md-6 mb-4">
+                        <div class="p-3 rounded @(isActive ? "border border-3 border-warning shadow-lg bg-dark" : "opacity-75")">
+
+                            <h4 class="mb-3 text-light">
+                                <span class="badge @(isActive ? "bg-warning text-dark" : "bg-primary") me-2">Hand @(i + 1)</span>
+                                @(isActive ? "⬅ Your Turn" : "")
+                            </h4>
+
+                            <div class="hand-container">
+                                @foreach (var card in hand.Cards)
+                                {
+                                    var isRed = card.Suit == "Hearts" || card.Suit == "Diamonds";
+                                    var suitSymbol = card.Suit == "Hearts" ? "♥" : card.Suit == "Diamonds" ? "♦" : card.Suit == "Clubs" ? "♣" : "♠";
+
+                                    <div class="playing-card @(isRed ? "red" : "black")">
+                                        <div class="fw-bold fs-5 text-start">@card.Rank</div>
+                                        <div class="suit-large">@suitSymbol</div>
+                                        <div class="fw-bold fs-5 text-end">@card.Rank</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
                     </div>
                 }
             </div>
@@ -74,22 +95,31 @@
     </div>
 
     <div class="row justify-content-center mt-4">
-        <div class="col-md-6 action-panel text-center">
+        <div class="col-md-8 action-panel text-center">
             <div class="d-flex justify-content-center gap-4">
 
                 @if (!isGameOver)
                 {
-                    <form asp-controller="BlackJack" asp-action="Hit" method="post" asp-route-id="@Model.playerhand.GameId">
-                        <button type="submit" class="btn btn-warning btn-lg px-5 fw-bold rounded-pill text-dark shadow-sm">
+                    <form asp-controller="BlackJack" asp-action="Hit" method="post" asp-route-id="@Model.GameId">
+                        <button type="submit" class="btn btn-warning btn-lg px-4 fw-bold rounded-pill text-dark shadow-sm">
                             💥 Hit
                         </button>
                     </form>
 
-                    <form asp-controller="BlackJack" asp-action="Stand" method="post" asp-route-id="@Model.playerhand.GameId">
-                        <button type="submit" class="btn btn-danger btn-lg px-5 fw-bold rounded-pill shadow-sm">
+                    <form asp-controller="BlackJack" asp-action="Stand" method="post" asp-route-id="@Model.GameId">
+                        <button type="submit" class="btn btn-danger btn-lg px-4 fw-bold rounded-pill shadow-sm">
                             🛑 Stand
                         </button>
                     </form>
+
+                    @if (canSplit)
+                    {
+                        <form asp-controller="BlackJack" asp-action="Split" method="post" asp-route-id="@Model.GameId">
+                            <button type="submit" class="btn btn-info btn-lg px-4 fw-bold rounded-pill text-dark shadow-sm border border-light">
+                                ✂️ Split
+                            </button>
+                        </form>
+                    }
                 }
                 else
                 {

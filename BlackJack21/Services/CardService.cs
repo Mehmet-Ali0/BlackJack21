@@ -59,6 +59,9 @@ namespace BlackJack21.Services
             _db.Games.Add(newGame);
             await _db.SaveChangesAsync();
 
+            newGame.ActiveHandId = playerHand.Id;
+            await _db.SaveChangesAsync();
+
             await InitialDrawAsync(newGame.Id);
             return newGame.Id;
         }
@@ -88,6 +91,15 @@ namespace BlackJack21.Services
         //Helper for Finding Ids
         public async Task<int> FindHandId(int GameId, string handType)
         {
+
+            var game = await _db.Games.FindAsync(GameId);
+
+            // If we are looking for the player, and there is an active split hand, return that one
+            if (handType == "Player" && game.ActiveHandId.HasValue)
+            {
+                return game.ActiveHandId.Value;
+            }
+
             return await _db.Hands
                 .Where(p => p.GameId == GameId && p.Type == handType)
                 .Select(p => p.Id)
@@ -97,6 +109,8 @@ namespace BlackJack21.Services
         //The first sequence of draws that will happen automaticly
         public async Task InitialDrawAsync(int GameId)
         {
+
+           
             
             //Get Hand Ids
             var playerDeckId = await FindHandId(GameId, "Player");
@@ -111,6 +125,8 @@ namespace BlackJack21.Services
             var thirdcard = await DrawCardAsync(GameId, playerDeckId);
 
             var fourthcard = await DrawCardAsync(GameId, dealerDeckId);
+            
+
 
             //Natural 21 Case
             int initialPlayerScore = await CalculateScoreAsync(GameId, "Player");
@@ -126,14 +142,8 @@ namespace BlackJack21.Services
                 }
             }
 
-
-
-
-
-
-
         }
-    
+
         //Sending the hands to the viewmodel
         public async Task<GameViewModel> GetGameDetailsAsync(int GameId)
         {
@@ -142,25 +152,35 @@ namespace BlackJack21.Services
                .Include(p => p.Game)
                .FirstOrDefaultAsync(p => p.GameId == GameId && p.Type == "Dealer");
 
-            var playerHand = await _db.Hands
+            // Fetch ALL player hands as a list
+            var playerHands = await _db.Hands
                 .Include(p => p.Cards)
                 .Include(p => p.Game)
-                .FirstOrDefaultAsync(p => p.GameId == GameId && p.Type == "Player");
+                .Where(p => p.GameId == GameId && p.Type == "Player")
+                .OrderBy(p => p.Id)
+                .ToListAsync();
+
+            var game = await _db.Games.FindAsync(GameId);
 
             return new GameViewModel
             {
-                playerhand = playerHand,
+                GameId = GameId,
+                ActiveHandId = game?.ActiveHandId,
+                playerhands = playerHands,
                 dealerhand = dealerHand
             };
-       
         }
-        
+
         public async Task<int> CalculateScoreAsync(int GameId, string HandType)
         {
+
+            int targetHandId = await FindHandId(GameId, HandType);
+
             var hand = await _db.Hands
                 .Include(p => p.Cards)
-                .Where(p => p.GameId == GameId && p.Type == HandType)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(p => p.Id == targetHandId);
+
+            if (hand == null) return 0;
 
             int score = 0;
             int aceCount = 0;
@@ -193,6 +213,39 @@ namespace BlackJack21.Services
             return score; 
         }
 
+        public async Task<int> CalculateScoreByHandIdAsync(int handId)
+        {
+            var hand = await _db.Hands
+                .Include(p => p.Cards)
+                .FirstOrDefaultAsync(p => p.Id == handId);
+
+            if (hand == null) return 0;
+
+            int score = 0;
+            int aceCount = 0;
+
+            foreach (var card in hand.Cards)
+            {
+                if (card.Rank == "Jack" || card.Rank == "Queen" || card.Rank == "King")
+                    score += 10;
+                else if (card.Rank == "Ace")
+                {
+                    score += 11;
+                    aceCount++;
+                }
+                else
+                    score += int.Parse(card.Rank);
+            }
+
+            while (score > 21 && aceCount > 0)
+            {
+                score -= 10;
+                aceCount--;
+            }
+
+            return score;
+        }
+
         public async Task<int> PlayerHitAsync(int GameId)
         {
             var playerHandId = await FindHandId(GameId, "Player");
@@ -205,18 +258,33 @@ namespace BlackJack21.Services
 
             if(score > 21)
             {
-                var game = await _db.Games.FindAsync(GameId);
+                var game = await _db.Games
+                    .Include(p => p.Hands)
+                    .FirstOrDefaultAsync(p => p.Id == GameId);
+
                 if(game != null)
                 {
-                    game.IsFinished = true;
+                    var playerHands = game.Hands
+                        .Where(h => h.Type == "Player")
+                        .OrderBy(h => h.Id)
+                        .ToList();
+                    
+                    if(playerHands.Count > 1 && game.ActiveHandId == playerHands[0].Id)
+                    {
+                        game.ActiveHandId = playerHands[1].Id;
+                    }
+                    else
+                    {
+                        game.IsFinished = true;
+                    }       
                     await _db.SaveChangesAsync();
                 }
             }
-
             return score;
-
         }
 
+        
+        
         public async Task<string> DealerHitAsync(int GameId)
         {
             var dealerHandId = await FindHandId(GameId, "Dealer");
@@ -228,23 +296,85 @@ namespace BlackJack21.Services
                 dealerScore = await CalculateScoreAsync(GameId, "Dealer");
             }
 
-           
-            int playerScore = await CalculateScoreAsync(GameId, "Player");
-            var game = await _db.Games.FindAsync(GameId);
-            if(game != null)
+            var game = await _db.Games
+            .Include(p => p.Hands)
+            .FirstOrDefaultAsync(p => p.Id == GameId);
+
+            if (game != null)
             {
                 game.IsFinished = true;
                 await _db.SaveChangesAsync();
             }
 
-            if (dealerScore > 21) return "Dealer Busts! You Win!";
-            if (playerScore > dealerScore) return "You Win!";
-            if (dealerScore > playerScore) return "Dealer Wins.";
+            var playerHands = game.Hands
+                .Where(h => h.Type == "Player")
+                .OrderBy(h => h.Id)
+                .ToList();
 
-            return "It's a tie.";
+            if (playerHands.Count == 1)
+            {
+                int playerScore = await CalculateScoreByHandIdAsync(playerHands[0].Id);
+
+                if (playerScore > 21) return "Bust! You went over 21.";
+                if (dealerScore > 21) return "Dealer Busts! You Win!";
+                if (playerScore > dealerScore) return "You Win!";
+                if (dealerScore > playerScore) return "Dealer Wins.";
+                return "🤝 It's a tie.";
+            }
+
+            string finalResultMessage = "";
+
+            for (int i = 0; i < playerHands.Count; i++)
+            {
+                int playerScore = await CalculateScoreByHandIdAsync(playerHands[i].Id);
+                int handNum = i + 1;
+
+                finalResultMessage += $"Hand {handNum}: ";
+
+                if (playerScore > 21) finalResultMessage += "Bust 💥 | ";
+                else if (dealerScore > 21) finalResultMessage += "Win 🎉 | ";
+                else if (playerScore > dealerScore) finalResultMessage += "Win 🎉 | ";
+                else if (dealerScore > playerScore) finalResultMessage += "Lose ❌ | ";
+                else finalResultMessage += "Push 🤝 | ";
+            }
+
+            return finalResultMessage.TrimEnd(' ', '|');
+       
         }
 
+        public async Task HandSplit(int GameId)
+        {
+            //Get the original handId for Drawing cards from the deck
+            var originalHandId = await FindHandId(GameId, "Player");
+            
+            //Create the split Hand
+            var splitHand = new Hand { Type = "Player", GameId = GameId };
+            _db.Hands.Add(splitHand);
 
+            //Put one of the cards from the orignal hand to the split hand
+            var topCard = await _db.Cards
+                .Where(p => p.Hand.GameId == GameId && p.Hand.Type == "Player")
+                .OrderBy(p => p.Id)
+                .FirstOrDefaultAsync();
+            
+            topCard.Hand = splitHand;
+
+            //Save it for the id initialization
+            await _db.SaveChangesAsync();
+
+            //Draw other cards to the related hands
+            var card1 = await DrawCardAsync(GameId, originalHandId);
+            var card2 = await DrawCardAsync(GameId, splitHand.Id);
+
+            //Find the Game
+            var game = await _db.Games.FirstOrDefaultAsync(p => p.Id == GameId);
+           
+            //Set active hand
+            game.ActiveHandId = originalHandId;
+
+            await _db.SaveChangesAsync();
+
+        }
 
 
 
