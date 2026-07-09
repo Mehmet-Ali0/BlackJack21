@@ -1,0 +1,39 @@
+﻿@model BlackJack21.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container mt-5">
+    <h2>Register</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="Register" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Email" class="control-label fw-bold"></label>
+                    <input asp-for="Email" class="form-control" placeholder="dealer@casino.com" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Password" class="control-label fw-bold"></label>
+                    <input asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="ConfirmPassword" class="control-label fw-bold"></label>
+                    <input asp-for="ConfirmPassword" class="form-control" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Create Account" class="btn btn-primary w-100" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -15,7 +15,6 @@ namespace BlackJack21.Models
 
         //Nav property
         public Game Game { get; set; }
-        public Player? Player { get; set; }
         public List<Card> Cards { get; set; } = new List<Card>();
     
     

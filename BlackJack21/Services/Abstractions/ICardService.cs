@@ -5,7 +5,7 @@ namespace BlackJack21.Services.Abstractions
 {
     public interface ICardService
     {
-       Task<int> StartGameAsync();
+        Task<int> StartGameAsync(string userId);
 
        Task<Card> DrawCardAsync(int GameId, int targetHandId);
 

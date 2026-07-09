@@ -19,10 +19,10 @@ namespace BlackJack21.Services
         
         
         //Initializes Game and Deck Structure for the game 
-        public async Task<int> StartGameAsync()
+        public async Task<int> StartGameAsync(string userId)
         {
             //Initialize game
-            var newGame = new Game { IsFinished = false };
+            var newGame = new Game { IsFinished = false, UserId = userId };
             var deckHand = new Hand { Type = "Deck", Game = newGame};
             var playerHand = new Hand { Type = "Player", Game = newGame };
             var dealerHand = new Hand { Type = "Dealer", Game = newGame };
@@ -109,9 +109,7 @@ namespace BlackJack21.Services
         //The first sequence of draws that will happen automaticly
         public async Task InitialDrawAsync(int GameId)
         {
-
-           
-            
+        
             //Get Hand Ids
             var playerDeckId = await FindHandId(GameId, "Player");
             var dealerDeckId = await FindHandId(GameId, "Dealer");
@@ -248,6 +246,7 @@ namespace BlackJack21.Services
 
         public async Task<int> PlayerHitAsync(int GameId)
         {
+            //Get active handId
             var playerHandId = await FindHandId(GameId, "Player");
             
             //Draw a card from the deck to the player hand
@@ -258,21 +257,27 @@ namespace BlackJack21.Services
 
             if(score > 21)
             {
+                //Fetch the game with the list of hands
                 var game = await _db.Games
                     .Include(p => p.Hands)
                     .FirstOrDefaultAsync(p => p.Id == GameId);
 
+                //Safety Check
                 if(game != null)
                 {
+                    //Filter the hands as [0] as the playerhand and [1] as the splithand
                     var playerHands = game.Hands
                         .Where(h => h.Type == "Player")
                         .OrderBy(h => h.Id)
                         .ToList();
                     
+                    //Do we have a split and Did the first hand bust
                     if(playerHands.Count > 1 && game.ActiveHandId == playerHands[0].Id)
                     {
+                        //Update pointer to the next hand
                         game.ActiveHandId = playerHands[1].Id;
                     }
+                    //Player didint split or busted the second hand
                     else
                     {
                         game.IsFinished = true;
@@ -287,32 +292,39 @@ namespace BlackJack21.Services
         
         public async Task<string> DealerHitAsync(int GameId)
         {
+            //Get dealersHand Id and Score
             var dealerHandId = await FindHandId(GameId, "Dealer");
             var dealerScore = await CalculateScoreAsync(GameId, "Dealer");
 
+            //If score is lower then 17 keep drawing cards
             while(dealerScore < 17)
             {
                 var card = await DrawCardAsync(GameId, dealerHandId);
                 dealerScore = await CalculateScoreAsync(GameId, "Dealer");
             }
 
+            //Get game info
             var game = await _db.Games
             .Include(p => p.Hands)
             .FirstOrDefaultAsync(p => p.Id == GameId);
 
+            //Set game to finished after drawing finishes
             if (game != null)
             {
                 game.IsFinished = true;
                 await _db.SaveChangesAsync();
             }
 
+            //Filter hands as [0] for player and [1] for split
             var playerHands = game.Hands
                 .Where(h => h.Type == "Player")
                 .OrderBy(h => h.Id)
                 .ToList();
 
+            //If split didnt happen 
             if (playerHands.Count == 1)
             {
+                
                 int playerScore = await CalculateScoreByHandIdAsync(playerHands[0].Id);
 
                 if (playerScore > 21) return "Bust! You went over 21.";
@@ -324,6 +336,7 @@ namespace BlackJack21.Services
 
             string finalResultMessage = "";
 
+            //Iterate through the hands and consturct the message
             for (int i = 0; i < playerHands.Count; i++)
             {
                 int playerScore = await CalculateScoreByHandIdAsync(playerHands[i].Id);

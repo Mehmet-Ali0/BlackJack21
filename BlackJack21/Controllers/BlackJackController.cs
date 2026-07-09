@@ -4,6 +4,8 @@ using BlackJack21.Services;
 using BlackJack21.Services.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BlackJack21.Controllers
 {
@@ -25,16 +27,25 @@ namespace BlackJack21.Controllers
         {
             return View();
         }
-
+        
+        [Authorize]
         [HttpPost("BlackJack/Start")]
         public async Task<IActionResult> Start()
         {
-            int newGameId = await _cardService.StartGameAsync();
+            string userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Index");
+            }
+
+            int newGameId = await _cardService.StartGameAsync(userId);
             return RedirectToAction("Play", new { id = newGameId });
         }
 
 
         //The first deal
+        [Authorize]
         [HttpGet("BlackJack/Play/{id}")]
         public async Task<IActionResult> Play(int id)
         {
@@ -57,7 +68,8 @@ namespace BlackJack21.Controllers
 
             return View(model);
         }
-
+        
+        [Authorize]
         [HttpPost("BlackJack/Hit/{id}")]
         public async Task<IActionResult> Hit(int id)
         {
@@ -66,13 +78,14 @@ namespace BlackJack21.Controllers
 
             var game = await _db.Games.FindAsync(id);
 
-            //Bust
+            //Dealers Turn You busted.
             if (game != null && game.IsFinished)
             {
                 string resultMessage = await _cardService.DealerHitAsync(id);
                 TempData["GameResult"] = resultMessage;
             }
            
+            //TODO: Bugs out when the second hand hits and gets 21 
             //BlackJack force to stand
             else if(currentscore == 21)
             {
@@ -82,7 +95,7 @@ namespace BlackJack21.Controllers
             return RedirectToAction("Play", new { id = id });
         }
 
-
+        [Authorize]
         [HttpPost("BlackJack/Stand/{id}")]
         public async Task<IActionResult> Stand(int id)
         {
@@ -93,23 +106,20 @@ namespace BlackJack21.Controllers
 
             if (game != null)
             {
-                var playerHands = game.Hands
-                    .Where(h => h.Type == "Player")
-                    .OrderBy(h => h.Id)
-                    .ToList();
+                //Get the next active hand
+                var nextHand = game.Hands
+                        .Where(h => h.Type == "Player" && h.Id > game.ActiveHandId)
+                        .OrderBy(h => h.Id)
+                        .FirstOrDefault();
 
-                int currentIndex = playerHands.FindIndex(h => h.Id == game.ActiveHandId);
-
-                // 2. THE GRACEFUL PIVOT: Is there another hand waiting after this one?
-                if (currentIndex != -1 && currentIndex < playerHands.Count - 1)
+                //If one exists set activehand to it and reload the view
+                if (nextHand != null)
                 {
-                    // Yes! Shift the spotlight to the next hand.
-                    game.ActiveHandId = playerHands[currentIndex + 1].Id;
+                    game.ActiveHandId = nextHand.Id;
                     await _db.SaveChangesAsync();
-
-                    // Do NOT call the dealer. Just reload the page so the player can play Hand 2!
                     return Redirect($"/BlackJack/Play/{id}");
                 }
+            
             }
 
             // 3. If we made it here, there are no more player hands. Dealer's turn!
@@ -120,7 +130,7 @@ namespace BlackJack21.Controllers
         }
 
 
-
+        [Authorize]
         [HttpPost("BlackJack/Split/{id}")]
         public async Task<IActionResult> Split(int id)
         {
