@@ -1,11 +1,12 @@
-﻿using BlackJack21.Data;
+﻿using System.Security.Claims;
+using BlackJack21.Data;
 using BlackJack21.Models;
 using BlackJack21.Services;
 using BlackJack21.Services.Abstractions;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 
 namespace BlackJack21.Controllers
 {
@@ -13,11 +14,13 @@ namespace BlackJack21.Controllers
     {
         private readonly ICardService _cardService;
         private readonly AppDbContext _db;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public BlackJackController(ICardService cardservice, AppDbContext db) 
+        public BlackJackController(ICardService cardservice, AppDbContext db, UserManager<ApplicationUser> userManager) 
         {
             _cardService = cardservice;
             _db = db;
+            _userManager = userManager;
         }
 
 
@@ -49,7 +52,10 @@ namespace BlackJack21.Controllers
         [HttpGet("BlackJack/Play/{id}")]
         public async Task<IActionResult> Play(int id)
         {
-            var model = await _cardService.GetGameDetailsAsync(id);
+            //Get user Id
+            string UserId = _userManager.GetUserId(User);
+            
+            var model = await _cardService.GetGameDetailsAsync(id,UserId);
 
             // THE FIX: Safely grab the Game state from the first hand in your new list!
             bool isGameFinished = model.playerhands.FirstOrDefault()?.Game?.IsFinished ?? false;

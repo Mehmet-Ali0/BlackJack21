@@ -12,7 +12,7 @@ namespace BlackJack21.Services.Abstractions
        Task<int> FindHandId(int GameId, string handType);
 
        Task InitialDrawAsync(int GameId);
-       Task<GameViewModel> GetGameDetailsAsync(int GameId);
+        Task<GameViewModel> GetGameDetailsAsync(int GameId, string UserId);
        Task<int> PlayerHitAsync(int gameId);
        Task<string> DealerHitAsync(int GameId);
         Task HandSplit(int GameId);

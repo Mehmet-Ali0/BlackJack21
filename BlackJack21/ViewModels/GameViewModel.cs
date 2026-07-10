@@ -10,7 +10,7 @@ namespace BlackJack21.ViewModels
         public int GameId { get; set; }
         public List<Hand> playerhands { get; set; }
 
-
+        public int Balance { get; set; }
 
 
 

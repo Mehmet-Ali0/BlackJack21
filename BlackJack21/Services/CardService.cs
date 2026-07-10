@@ -143,7 +143,7 @@ namespace BlackJack21.Services
         }
 
         //Sending the hands to the viewmodel
-        public async Task<GameViewModel> GetGameDetailsAsync(int GameId)
+        public async Task<GameViewModel> GetGameDetailsAsync(int GameId, string UserId)
         {
             var dealerHand = await _db.Hands
                .Include(p => p.Cards)
@@ -158,6 +158,14 @@ namespace BlackJack21.Services
                 .OrderBy(p => p.Id)
                 .ToListAsync();
 
+            //Get player balance
+            var balance = await _db.Users
+                .Where(p => p.Id == UserId)
+                .Select(p => p.Balance)
+                .FirstOrDefaultAsync();
+
+
+
             var game = await _db.Games.FindAsync(GameId);
 
             return new GameViewModel
@@ -165,7 +173,8 @@ namespace BlackJack21.Services
                 GameId = GameId,
                 ActiveHandId = game?.ActiveHandId,
                 playerhands = playerHands,
-                dealerhand = dealerHand
+                dealerhand = dealerHand,
+                Balance = balance
             };
         }
 
@@ -244,6 +253,7 @@ namespace BlackJack21.Services
             return score;
         }
 
+        //☺ Add the chip Stuff here for calculation
         public async Task<int> PlayerHitAsync(int GameId)
         {
             //Get active handId
@@ -288,8 +298,8 @@ namespace BlackJack21.Services
             return score;
         }
 
-        
-        
+
+        //☺ Add the chip Stuff here for calculation
         public async Task<string> DealerHitAsync(int GameId)
         {
             //Get dealersHand Id and Score
