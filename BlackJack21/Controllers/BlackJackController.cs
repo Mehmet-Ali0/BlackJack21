@@ -50,12 +50,12 @@ namespace BlackJack21.Controllers
         //The first deal
         [Authorize]
         [HttpGet("BlackJack/Play/{id}")]
-        public async Task<IActionResult> Play(int id)
+        public async Task<IActionResult> Play(int id,int Bet)
         {
             //Get user Id
             string UserId = _userManager.GetUserId(User);
             
-            var model = await _cardService.GetGameDetailsAsync(id,UserId);
+            var model = await _cardService.GetGameDetailsAsync(id,UserId,Bet);
 
             // THE FIX: Safely grab the Game state from the first hand in your new list!
             bool isGameFinished = model.playerhands.FirstOrDefault()?.Game?.IsFinished ?? false;

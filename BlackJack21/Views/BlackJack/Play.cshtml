@@ -14,12 +14,20 @@
                     activeHand.Cards[0].Rank == activeHand.Cards[1].Rank;
 }
 
+<form id="BlackJackForm" method="post"></form>
+
 <div class="container py-4">
     
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
         <h1 class="fw-bold text-warning mb-0">♣ Blackjack 21 ♦</h1>
+        
         @*Add Chips here*@
-        <h1 class="fw-bold text-warning mb-0">Balance: @Model.Balance</h1>    
+        <h1 class="fw-bold text-warning mb-0">Balance: @Model.Balance</h1> 
+        
+        @*Bets Here*@
+        <label class="fw-bold text-warning mb-0">Bet Amount: </label>
+        <input type="number" asp-for="Bet"/>
+
         <span class="badge bg-dark fs-6 border border-secondary">Game ID: #@Model.GameId</span>
     </div>
 
@@ -100,37 +108,33 @@
         <div class="col-md-8 action-panel text-center">
             <div class="d-flex justify-content-center gap-4">
 
+                
+
                 @if (!isGameOver)
-                {
-                    <form asp-controller="BlackJack" asp-action="Hit" method="post" asp-route-id="@Model.GameId">
-                        <button type="submit" class="btn btn-warning btn-lg px-4 fw-bold rounded-pill text-dark shadow-sm">
+                {   
+                    <button formaction="/BlackJack/Hit/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-warning btn-lg px-4 fw-bold rounded-pill text-dark shadow-sm">
                             💥 Hit
                         </button>
-                    </form>
 
-                    <form asp-controller="BlackJack" asp-action="Stand" method="post" asp-route-id="@Model.GameId">
-                        <button type="submit" class="btn btn-danger btn-lg px-4 fw-bold rounded-pill shadow-sm">
+                    <button formaction="/BlackJack/Stand/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-danger btn-lg px-4 fw-bold rounded-pill shadow-sm">
                             🛑 Stand
-                        </button>
-                    </form>
-
+                        </button>    
                     @if (canSplit)
                     {
-                        <form asp-controller="BlackJack" asp-action="Split" method="post" asp-route-id="@Model.GameId">
-                            <button type="submit" class="btn btn-info btn-lg px-4 fw-bold rounded-pill text-dark shadow-sm border border-light">
+                        <button formaction="/BlackJack/Split/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-info btn-lg px-4 fw-bold rounded-pill text-dark shadow-sm border border-light">
                                 ✂️ Split
                             </button>
-                        </form>
                     }
                 }
                 else
                 {
-                    <form asp-controller="BlackJack" asp-action="Start" method="post">
-                        <button type="submit" class="btn btn-success btn-lg px-5 fw-bold rounded-pill shadow-lg border border-light">
+                    <button formaction="/BlackJack/Start" form="BlackJackForm" type="submit" class="btn btn-success btn-lg px-5 fw-bold rounded-pill shadow-lg border border-light">
                             🔄 Play Again
                         </button>
-                    </form>
                 }
+
+                
+
 
             </div>
         </div>

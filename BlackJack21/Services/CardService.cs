@@ -143,7 +143,8 @@ namespace BlackJack21.Services
         }
 
         //Sending the hands to the viewmodel
-        public async Task<GameViewModel> GetGameDetailsAsync(int GameId, string UserId)
+        //☺ Handle the bet stuff
+        public async Task<GameViewModel> GetGameDetailsAsync(int GameId, string UserId, int Bet)
         {
             var dealerHand = await _db.Hands
                .Include(p => p.Cards)
@@ -174,7 +175,8 @@ namespace BlackJack21.Services
                 ActiveHandId = game?.ActiveHandId,
                 playerhands = playerHands,
                 dealerhand = dealerHand,
-                Balance = balance
+                Balance = balance,
+                Bet = Bet
             };
         }
 
