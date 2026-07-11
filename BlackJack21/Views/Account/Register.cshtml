@@ -1,39 +1,54 @@
 ﻿@model BlackJack21.ViewModels.RegisterViewModel
 
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "VIP Registration";
 }
 
-<div class="container mt-5">
-    <h2>Register</h2>
-    <hr />
-    <div class="row">
-        <div class="col-md-4">
-            <form asp-action="Register" method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Email" class="control-label fw-bold"></label>
-                    <input asp-for="Email" class="form-control" placeholder="dealer@casino.com" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Password" class="control-label fw-bold"></label>
-                    <input asp-for="Password" class="form-control" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="ConfirmPassword" class="control-label fw-bold"></label>
-                    <input asp-for="ConfirmPassword" class="form-control" />
-                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                </div>
+<div class="container d-flex justify-content-center align-items-center mt-5 pt-4">
+    <div class="vip-auth-container w-100" style="max-width: 450px;">
 
-                <div class="form-group">
-                    <input type="submit" value="Create Account" class="btn btn-primary w-100" />
-                </div>
-            </form>
+        <div class="text-center mb-4">
+            <h2 class="vip-auth-title fw-bold">REGISTER</h2>
+            <p class="text-secondary small" style="letter-spacing: 1px;">Register for exclusive table access</p>
         </div>
+
+        <form asp-action="Register" method="post">
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger bg-dark border border-danger text-danger py-2 px-3 small rounded-3"></div>
+
+            <div class="form-group mb-4">
+                <label asp-for="Email" class="vip-label">Email Address</label>
+                <input asp-for="Email" class="form-control vip-auth-input" placeholder="dealer@casino.com" autocomplete="email" />
+                <span asp-validation-for="Email" class="text-danger small mt-1 d-block fw-bold"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label asp-for="Password" class="vip-label">Password</label>
+                <input asp-for="Password" class="form-control vip-auth-input" placeholder="Create a strong password" autocomplete="new-password" />
+                <span asp-validation-for="Password" class="text-danger small mt-1 d-block fw-bold"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label asp-for="ConfirmPassword" class="vip-label">Confirm Password</label>
+                <input asp-for="ConfirmPassword" class="form-control vip-auth-input" placeholder="Repeat your password" autocomplete="new-password" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger small mt-1 d-block fw-bold"></span>
+            </div>
+
+            <div class="form-group mt-5">
+                <button type="submit" class="btn btn-gold w-100 py-3 fs-5 shadow-sm">
+                    Create Account
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top border-secondary">
+            <p class="text-muted small mb-0">
+                Already a member? <a asp-action="Login" class="link-gold fw-bold">Login here</a>
+            </p>
+        </div>
+
     </div>
 </div>

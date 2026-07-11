@@ -14,34 +14,41 @@
                     activeHand.Cards[0].Rank == activeHand.Cards[1].Rank;
 }
 
+<!-- Hidden Form for Action Routing -->
 <form id="BlackJackForm" method="post"></form>
 
 <div class="container py-4">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
-        <h1 class="fw-bold text-warning mb-0">♣ Blackjack 21 ♦</h1>
-        
-        @*Add Chips here*@
-        <h1 class="fw-bold text-warning mb-0">Balance: @Model.Balance</h1> 
-        
-        
-       
-        
-        <span class="badge bg-dark fs-6 border border-secondary">Game ID: #@Model.GameId</span>
+
+    <!-- Header & HUD -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+        <div>
+            <h1 class="fw-bold text-light mb-0" style="letter-spacing: 1px;">
+                <span class="text-danger">♥</span> Blackjack <span class="text-warning">21</span> <span class="text-danger">♦</span>
+            </h1>
+            <span class="text-muted small fw-bold">GAME ID: #@Model.GameId</span>
+        </div>
+
+        <div class="bg-dark border border-2 border-warning rounded px-4 py-2 shadow-sm">
+            <h3 class="fw-bold text-warning mb-0">Balance: <span class="text-white">@Model.Balance</span></h3>
+        </div>
     </div>
 
+    <!-- Game Result Banner -->
     @if (isGameOver)
     {
-        <div class="alert alert-info text-center fs-3 fw-bold mb-4 shadow border border-info">
+        <div class="alert bg-dark text-white text-center fs-3 fw-bold mb-4 shadow-lg border border-2 border-warning" style="letter-spacing: 1px;">
             @gameResult
         </div>
     }
 
-    <div class="blackjack-table shadow-lg">
+    <div class="blackjack-table shadow-lg rounded-3 p-2">
 
-        <div class="mb-5">
-            <h4 class="mb-3 text-light"><span class="badge bg-danger me-2">Dealer</span> Dealer's Hand</h4>
-            <div class="hand-container">
+        <!-- Dealer's Area -->
+        <div class="mb-5 px-3">
+            <h4 class="mb-3 text-light text-uppercase fw-bold fs-6 tracking-wide">
+                <span class="badge bg-danger me-2 shadow-sm">Dealer</span> Hand
+            </h4>
+            <div class="hand-container d-flex flex-wrap gap-2">
                 @for (int i = 0; i < Model.dealerhand.Cards.Count; i++)
                 {
                     var card = Model.dealerhand.Cards[i];
@@ -51,7 +58,7 @@
                         var isRed = card.Suit == "Hearts" || card.Suit == "Diamonds";
                         var suitSymbol = card.Suit == "Hearts" ? "♥" : card.Suit == "Diamonds" ? "♦" : card.Suit == "Clubs" ? "♣" : "♠";
 
-                        <div class="playing-card @(isRed ? "red" : "black")">
+                        <div class="playing-card shadow-sm @(isRed ? "red" : "black")">
                             <div class="fw-bold fs-5 text-start">@card.Rank</div>
                             <div class="suit-large">@suitSymbol</div>
                             <div class="fw-bold fs-5 text-end rotate-180">@card.Rank</div>
@@ -59,39 +66,43 @@
                     }
                     else
                     {
-                        <div class="playing-card hidden">
-                            <div class="fs-1 fw-bold opacity-50">?</div>
+                        <div class="playing-card hidden shadow-sm bg-secondary border border-2 border-dark d-flex justify-content-center align-items-center">
+                            <div class="fs-1 fw-bold text-dark opacity-25">♠</div>
                         </div>
                     }
                 }
             </div>
         </div>
 
+        <!-- Player's Area -->
         <div class="mb-4">
-            <div class="row">
+            <div class="row g-4">
                 @for (int i = 0; i < Model.playerhands.Count; i++)
                 {
                     var hand = Model.playerhands[i];
                     bool isActive = hand.Id == Model.ActiveHandId && !isGameOver;
 
-                    <div class="col-md-6 mb-4">
-                        <div class="p-3 rounded @(isActive ? "border border-3 border-warning shadow-lg bg-dark" : "opacity-75")">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded h-100 @(isActive ? "border border-3 border-warning shadow-lg bg-dark" : "bg-dark bg-opacity-50 opacity-50")" style="transition: all 0.3s ease;">
 
-                            <h4 class="mb-3 text-light">
-                                <span class="badge @(isActive ? "bg-warning text-dark" : "bg-primary") me-2">Hand @(i + 1)</span>
-                                @(isActive ? "⬅ Your Turn" : "")
+                            <h4 class="mb-3 text-light text-uppercase fw-bold fs-6">
+                                <span class="badge @(isActive ? "bg-warning text-dark shadow-sm" : "bg-primary") me-2">Hand @(i + 1)</span>
+                                @if (isActive)
+                                {
+                                    <span class="text-warning small animate-pulse">⬅ Your Turn</span>
+                                }
                             </h4>
 
-                            <div class="hand-container">
+                            <div class="hand-container d-flex flex-wrap gap-2">
                                 @foreach (var card in hand.Cards)
                                 {
                                     var isRed = card.Suit == "Hearts" || card.Suit == "Diamonds";
                                     var suitSymbol = card.Suit == "Hearts" ? "♥" : card.Suit == "Diamonds" ? "♦" : card.Suit == "Clubs" ? "♣" : "♠";
 
-                                    <div class="playing-card @(isRed ? "red" : "black")">
+                                    <div class="playing-card shadow-sm @(isRed ? "red" : "black")">
                                         <div class="fw-bold fs-5 text-start">@card.Rank</div>
                                         <div class="suit-large">@suitSymbol</div>
-                                        <div class="fw-bold fs-5 text-end">@card.Rank</div>
+                                        <div class="fw-bold fs-5 text-end rotate-180">@card.Rank</div>
                                     </div>
                                 }
                             </div>
@@ -103,39 +114,36 @@
 
     </div>
 
-    <div class="row justify-content-center mt-4">
+    <!-- Action Panel -->
+    <div class="row justify-content-center mt-5">
         <div class="col-md-8 action-panel text-center">
-            <div class="d-flex justify-content-center gap-4">
 
-                @*Send Bet Amount*@
-                <input type="hidden" name="Bet" value="@Model.Bet" form="BlackJackForm" />
+            <input type="hidden" name="Bet" value="@Model.Bet" form="BlackJackForm" />
 
+            <div class="d-flex justify-content-center gap-3">
                 @if (!isGameOver)
-                {   
-                    <button formaction="/BlackJack/Hit/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-warning btn-lg px-4 fw-bold rounded-pill text-dark shadow-sm">
-                            💥 Hit
+                {
+                    <button formaction="/BlackJack/Hit/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-warning btn-lg px-5 fw-bold rounded-pill text-dark shadow">
+                        💥 Hit
                     </button>
 
-                    <button formaction="/BlackJack/Stand/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-danger btn-lg px-4 fw-bold rounded-pill shadow-sm">
-                            🛑 Stand
-                        </button>    
+                    <button formaction="/BlackJack/Stand/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-danger btn-lg px-5 fw-bold rounded-pill shadow">
+                        🛑 Stand
+                    </button>
+
                     @if (canSplit)
                     {
-                        <button formaction="/BlackJack/Split/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-info btn-lg px-4 fw-bold rounded-pill text-dark shadow-sm border border-light">
-                                ✂️ Split
-                            </button>
+                        <button formaction="/BlackJack/Split/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-info btn-lg px-4 fw-bold rounded-pill text-dark shadow border border-light">
+                            ✂️ Split
+                        </button>
                     }
                 }
                 else
                 {
-                    <button formaction="/BlackJack/Start" form="BlackJackForm" type="submit" class="btn btn-success btn-lg px-5 fw-bold rounded-pill shadow-lg border border-light">
-                            🔄 Play Again
-                        </button>
+                    <button formaction="/BlackJack/Start" form="BlackJackForm" type="submit" class="btn btn-success btn-lg px-5 py-3 fs-4 fw-bold rounded-pill shadow-lg border border-light">
+                        🔄 Play Again
+                    </button>
                 }
-
-                
-
-
             </div>
         </div>
     </div>

@@ -152,3 +152,89 @@ body.blackjack-theme {
         border-color: #fff;
         color: #fff;
     }
+
+
+.vip-auth-container {
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 16px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+    padding: 3rem 2.5rem;
+}
+
+.vip-auth-title {
+    color: #d4af37; /* Metallic Gold */
+    font-family: 'Georgia', serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Input Fields */
+.vip-auth-input {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+    .vip-auth-input:focus {
+        background-color: rgba(0, 0, 0, 0.8) !important;
+        border-color: #d4af37 !important;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.15) !important;
+        outline: none;
+    }
+
+/* Labels */
+.vip-label {
+    color: #aaa;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Primary Action Button */
+.btn-gold {
+    background: linear-gradient(145deg, #d4af37 0%, #aa8c2c 100%);
+    color: #000;
+    border: 1px solid #ffdf00;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+    .btn-gold:hover {
+        background: linear-gradient(145deg, #e6c84f 0%, #b89830 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
+        color: #000;
+    }
+
+/* Custom Checkbox */
+.form-check-input:checked {
+    background-color: #d4af37;
+    border-color: #d4af37;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(212, 175, 55, 0.25);
+    border-color: #d4af37;
+}
+
+.link-gold {
+    color: #d4af37;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+    .link-gold:hover {
+        color: #fff;
+    }
