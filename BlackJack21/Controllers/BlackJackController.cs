@@ -33,7 +33,7 @@ namespace BlackJack21.Controllers
         
         [Authorize]
         [HttpPost("BlackJack/Start")]
-        public async Task<IActionResult> Start()
+        public async Task<IActionResult> Start(int Bet)
         {
             string userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
 
@@ -43,7 +43,7 @@ namespace BlackJack21.Controllers
             }
 
             int newGameId = await _cardService.StartGameAsync(userId);
-            return RedirectToAction("Play", new { id = newGameId });
+            return RedirectToAction("Play", new { id = newGameId, Bet = Bet });
         }
 
 
@@ -54,6 +54,9 @@ namespace BlackJack21.Controllers
         {
             //Get user Id
             string UserId = _userManager.GetUserId(User);
+            
+            //Get the user itself
+            var user = await _userManager.FindByIdAsync(UserId);
             
             var model = await _cardService.GetGameDetailsAsync(id,UserId,Bet);
 
@@ -67,9 +70,33 @@ namespace BlackJack21.Controllers
                 int playerScore = await _cardService.CalculateScoreByHandIdAsync(model.playerhands[0].Id);
                 int dealerScore = await _cardService.CalculateScoreByHandIdAsync(model.dealerhand.Id);
 
-                if (playerScore == 21 && dealerScore == 21) TempData["GameResult"] = "🤝 Double Natural! Tie.";
-                else if (playerScore == 21) TempData["GameResult"] = "🎉 NATURAL BLACKJACK! You win!";
-                else if (dealerScore == 21) TempData["GameResult"] = "❌ Dealer Natural 21. You lose.";
+                bool balanceChanged = false;
+
+                if (playerScore == 21 && dealerScore == 21)
+                {
+                    TempData["GameResult"] = "🤝 Double Natural! Tie.";
+                }
+                else if (playerScore == 21)
+                {
+                    user.Balance = user.Balance + Bet * 2;
+                    TempData["GameResult"] = "🎉 NATURAL BLACKJACK! You win!";
+                    balanceChanged = true;
+                }
+                else if (dealerScore == 21)
+                {
+                    user.Balance = user.Balance - Bet;
+                    TempData["GameResult"] = "❌ Dealer Natural 21. You lose.";
+                    balanceChanged = true;
+
+                }
+
+                if (balanceChanged)
+                {
+                    await _userManager.UpdateAsync(user);
+                    model.Balance = user.Balance;
+                }
+            
+            
             }
 
             return View(model);
@@ -77,17 +104,17 @@ namespace BlackJack21.Controllers
         
         [Authorize]
         [HttpPost("BlackJack/Hit/{id}")]
-        public async Task<IActionResult> Hit(int id)
+        public async Task<IActionResult> Hit(int id, int Bet)
         {
             //Draw the card
-            int currentscore = await _cardService.PlayerHitAsync(id);
+            int currentscore = await _cardService.PlayerHitAsync(id,Bet);
 
             var game = await _db.Games.FindAsync(id);
 
             //Dealers Turn You busted.
             if (game != null && game.IsFinished)
             {
-                string resultMessage = await _cardService.DealerHitAsync(id);
+                string resultMessage = await _cardService.DealerHitAsync(id,Bet);
                 TempData["GameResult"] = resultMessage;
             }
            
@@ -95,15 +122,15 @@ namespace BlackJack21.Controllers
             //BlackJack force to stand
             else if(currentscore == 21)
             {
-                return RedirectToAction("Stand", new { id = id });
+                return RedirectToAction("Stand", new { id = id , Bet = Bet});
             }
             //Show new cards
-            return RedirectToAction("Play", new { id = id });
+            return RedirectToAction("Play", new { id = id, Bet = Bet });
         }
 
         [Authorize]
         [HttpPost("BlackJack/Stand/{id}")]
-        public async Task<IActionResult> Stand(int id)
+        public async Task<IActionResult> Stand(int id, int Bet)
         {
             // 1. Fetch the game and all player hands
             var game = await _db.Games
@@ -127,12 +154,14 @@ namespace BlackJack21.Controllers
                 }
             
             }
-
+        
+            
             // 3. If we made it here, there are no more player hands. Dealer's turn!
-            string resultMessage = await _cardService.DealerHitAsync(id);
+            string resultMessage = await _cardService.DealerHitAsync(id,Bet);
             TempData["GameResult"] = resultMessage;
 
-            return Redirect($"/BlackJack/Play/{id}");
+            return RedirectToAction("Play", new { id = id, Bet = Bet });
+            
         }
 
 

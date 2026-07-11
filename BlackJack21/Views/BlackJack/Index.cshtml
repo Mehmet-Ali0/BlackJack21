@@ -6,22 +6,42 @@
     ViewData["Title"] = "Welcome to Blackjack";
 }
 
-<div class="text-center mt-5 py-5">
-    <h1 class="display-3 font-weight-bold text-success mb-3">Blackjack 21</h1>
-    <p class="lead text-light mb-5">Test your strategy against the dealer.</p>
+@*Ai slop for the view*@
 
-    @if (SignInManager.IsSignedIn(User))
-    {
-        <form action="/BlackJack/Start" method="post">
-            <button type="submit" class="btn btn-success btn-lg px-5 py-3 fs-3 shadow-lg rounded-pill animate-bounce">
-                Start New Game
-            </button>
-        </form>
-    }
-    else
-    {
-        <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg px-5 py-3 fs-3 shadow-lg rounded-pill">
-            Login to Play
-        </a>
-    }
+<div class="text-center mt-5 py-5">
+
+    <div class="vip-container mt-4">
+
+        <h1 class="display-4 vip-title mb-2 text-uppercase">
+            Blackjack <span style="font-weight: bold; color: #fff;">21</span>
+        </h1>
+       
+
+        @if (SignInManager.IsSignedIn(User))
+        {
+            <form action="/BlackJack/Start" method="post" class="mx-auto" style="max-width: 380px;">
+
+                <div class="mb-4 text-start">
+                    <label class="text-secondary mb-2 text-uppercase" style="letter-spacing: 1px; font-size: 0.85rem;">Select Wager</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text vip-addon">
+                            <span class="fs-5">🪙</span>
+                        </span>
+                        <input type="number" name="Bet" class="form-control vip-input" value="50" min="10" step="10" required />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn vip-btn w-100 py-3 fs-4 fw-bold text-uppercase mt-2">
+                    Deal Hand
+                </button>
+
+            </form>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login" class="btn login-btn w-100 py-3 fs-5 text-uppercase mt-3 rounded-3">
+                Authenticate to Play
+            </a>
+        }
+    </div>
 </div>

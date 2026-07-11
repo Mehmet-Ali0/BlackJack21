@@ -1,4 +1,4 @@
-﻿/* Custom Blackjack Casino Theme */
+﻿/* Custom Blackjack Casino Theme (Ai slop)*/
 
 body.blackjack-theme {
     background: radial-gradient(circle, #1a4a3a 0%, #0d241c 100%);
@@ -74,3 +74,81 @@ body.blackjack-theme {
     border: 1px solid #495057;
     box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
+.vip-container {
+    background: rgba(20, 20, 20, 0.85); /* Dark, translucent background */
+    backdrop-filter: blur(12px); /* Glass effect */
+    border: 1px solid rgba(212, 175, 55, 0.2); /* Subtle gold rim */
+    border-radius: 16px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    padding: 3.5rem;
+    max-width: 550px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.vip-title {
+    color: #d4af37; /* Metallic Gold */
+    font-family: 'Georgia', serif;
+    font-weight: normal;
+    letter-spacing: 3px;
+    text-shadow: 0 2px 15px rgba(212, 175, 55, 0.15);
+}
+
+.vip-input {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid rgba(212, 175, 55, 0.4) !important;
+    color: #fff !important;
+    font-size: 1.5rem;
+    text-align: center;
+    border-radius: 0 8px 8px 0 !important;
+    transition: all 0.3s ease;
+}
+
+    .vip-input:focus {
+        background-color: rgba(10, 10, 10, 0.9) !important;
+        border-color: #d4af37 !important;
+        box-shadow: 0 0 20px rgba(212, 175, 55, 0.2) !important;
+        outline: none;
+    }
+
+.vip-addon {
+    background-color: rgba(212, 175, 55, 0.05);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    color: #d4af37;
+}
+
+.vip-btn {
+    background: linear-gradient(145deg, #198754 0%, #115c38 100%);
+    border: 1px solid #1e9e62;
+    color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(25, 135, 84, 0.2);
+    transition: all 0.2s ease-in-out;
+}
+
+    .vip-btn:hover {
+        background: linear-gradient(145deg, #1e9e62 0%, #157347 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(25, 135, 84, 0.4);
+        color: #fff;
+    }
+
+    .vip-btn:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 10px rgba(25, 135, 84, 0.3);
+    }
+
+.login-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ccc;
+    transition: all 0.2s ease;
+}
+
+    .login-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: #fff;
+        color: #fff;
+    }

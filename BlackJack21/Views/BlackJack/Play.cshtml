@@ -24,10 +24,9 @@
         @*Add Chips here*@
         <h1 class="fw-bold text-warning mb-0">Balance: @Model.Balance</h1> 
         
-        @*Bets Here*@
-        <label class="fw-bold text-warning mb-0">Bet Amount: </label>
-        <input type="number" asp-for="Bet"/>
-
+        
+       
+        
         <span class="badge bg-dark fs-6 border border-secondary">Game ID: #@Model.GameId</span>
     </div>
 
@@ -108,13 +107,14 @@
         <div class="col-md-8 action-panel text-center">
             <div class="d-flex justify-content-center gap-4">
 
-                
+                @*Send Bet Amount*@
+                <input type="hidden" name="Bet" value="@Model.Bet" form="BlackJackForm" />
 
                 @if (!isGameOver)
                 {   
                     <button formaction="/BlackJack/Hit/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-warning btn-lg px-4 fw-bold rounded-pill text-dark shadow-sm">
                             💥 Hit
-                        </button>
+                    </button>
 
                     <button formaction="/BlackJack/Stand/@Model.GameId" form="BlackJackForm" type="submit" class="btn btn-danger btn-lg px-4 fw-bold rounded-pill shadow-sm">
                             🛑 Stand

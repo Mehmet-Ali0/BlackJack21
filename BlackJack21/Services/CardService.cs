@@ -2,6 +2,7 @@
 using BlackJack21.Models;
 using BlackJack21.Services.Abstractions;
 using BlackJack21.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -11,10 +12,12 @@ namespace BlackJack21.Services
     {
         
         private readonly AppDbContext _db;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CardService(AppDbContext appDbContext)
+        public CardService(AppDbContext appDbContext, UserManager<ApplicationUser> userManager)
         {
             _db = appDbContext;
+            _userManager = userManager;
         }
         
         
@@ -256,7 +259,7 @@ namespace BlackJack21.Services
         }
 
         //☺ Add the chip Stuff here for calculation
-        public async Task<int> PlayerHitAsync(int GameId)
+        public async Task<int> PlayerHitAsync(int GameId, int Bet)
         {
             //Get active handId
             var playerHandId = await FindHandId(GameId, "Player");
@@ -302,12 +305,13 @@ namespace BlackJack21.Services
 
 
         //☺ Add the chip Stuff here for calculation
-        public async Task<string> DealerHitAsync(int GameId)
+        public async Task<string> DealerHitAsync(int GameId, int Bet)
         {
             //Get dealersHand Id and Score
             var dealerHandId = await FindHandId(GameId, "Dealer");
             var dealerScore = await CalculateScoreAsync(GameId, "Dealer");
 
+          
             //If score is lower then 17 keep drawing cards
             while(dealerScore < 17)
             {
@@ -318,6 +322,7 @@ namespace BlackJack21.Services
             //Get game info
             var game = await _db.Games
             .Include(p => p.Hands)
+            .Include(p => p.User)
             .FirstOrDefaultAsync(p => p.Id == GameId);
 
             //Set game to finished after drawing finishes
@@ -339,10 +344,30 @@ namespace BlackJack21.Services
                 
                 int playerScore = await CalculateScoreByHandIdAsync(playerHands[0].Id);
 
-                if (playerScore > 21) return "Bust! You went over 21.";
-                if (dealerScore > 21) return "Dealer Busts! You Win!";
-                if (playerScore > dealerScore) return "You Win!";
-                if (dealerScore > playerScore) return "Dealer Wins.";
+                if (playerScore > 21)
+                {
+                    game.User.Balance -= Bet;
+                    await _db.SaveChangesAsync();
+                    return "Bust! You went over 21.";
+                } 
+                if (dealerScore > 21) 
+                {
+                    game.User.Balance = game.User.Balance + Bet * 2;
+                    await _db.SaveChangesAsync();
+                    return "Dealer Busts! You Win!";
+                }
+                if (playerScore > dealerScore)
+                {
+                    game.User.Balance = game.User.Balance + Bet * 2;
+                    await _db.SaveChangesAsync();
+                    return "You Win!";
+                }
+                if (dealerScore > playerScore)
+                {
+                    game.User.Balance -= Bet;
+                    await _db.SaveChangesAsync();
+                    return "Dealer Wins.";
+                }
                 return "🤝 It's a tie.";
             }
 
@@ -356,16 +381,19 @@ namespace BlackJack21.Services
 
                 finalResultMessage += $"Hand {handNum}: ";
 
-                if (playerScore > 21) finalResultMessage += "Bust 💥 | ";
-                else if (dealerScore > 21) finalResultMessage += "Win 🎉 | ";
-                else if (playerScore > dealerScore) finalResultMessage += "Win 🎉 | ";
-                else if (dealerScore > playerScore) finalResultMessage += "Lose ❌ | ";
+                if (playerScore > 21) { game.User.Balance -= Bet; finalResultMessage += "Bust 💥 | "; }
+                else if (dealerScore > 21) { game.User.Balance = game.User.Balance + Bet * 2; finalResultMessage += "Win 🎉 | "; }
+                else if (playerScore > dealerScore) { game.User.Balance = game.User.Balance + Bet * 2; finalResultMessage += "Win 🎉 | "; }
+                else if (dealerScore > playerScore) { game.User.Balance -= Bet; finalResultMessage += "Lose ❌ | "; }
                 else finalResultMessage += "Push 🤝 | ";
-            }
+                }
 
             return finalResultMessage.TrimEnd(' ', '|');
        
         }
+
+       
+
 
         public async Task HandSplit(int GameId)
         {
@@ -401,7 +429,7 @@ namespace BlackJack21.Services
 
         }
 
-
+        
 
 
     }
