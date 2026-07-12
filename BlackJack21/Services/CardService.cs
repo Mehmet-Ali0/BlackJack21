@@ -347,24 +347,28 @@ namespace BlackJack21.Services
                 if (playerScore > 21)
                 {
                     game.User.Balance -= Bet;
+                    game.User.TotalMoneyLost += Bet;
                     await _db.SaveChangesAsync();
                     return "Bust! You went over 21.";
                 } 
                 if (dealerScore > 21) 
                 {
                     game.User.Balance = game.User.Balance + Bet * 2;
+                    game.User.TotalMoneyWon += Bet;
                     await _db.SaveChangesAsync();
                     return "Dealer Busts! You Win!";
                 }
                 if (playerScore > dealerScore)
                 {
                     game.User.Balance = game.User.Balance + Bet * 2;
+                    game.User.TotalMoneyWon += Bet;
                     await _db.SaveChangesAsync();
                     return "You Win!";
                 }
                 if (dealerScore > playerScore)
                 {
                     game.User.Balance -= Bet;
+                    game.User.TotalMoneyLost += Bet;
                     await _db.SaveChangesAsync();
                     return "Dealer Wins.";
                 }
@@ -381,12 +385,14 @@ namespace BlackJack21.Services
 
                 finalResultMessage += $"Hand {handNum}: ";
 
-                if (playerScore > 21) { game.User.Balance -= Bet; finalResultMessage += "Bust 💥 | "; }
-                else if (dealerScore > 21) { game.User.Balance = game.User.Balance + Bet * 2; finalResultMessage += "Win 🎉 | "; }
-                else if (playerScore > dealerScore) { game.User.Balance = game.User.Balance + Bet * 2; finalResultMessage += "Win 🎉 | "; }
-                else if (dealerScore > playerScore) { game.User.Balance -= Bet; finalResultMessage += "Lose ❌ | "; }
+                if (playerScore > 21) { game.User.Balance -= Bet; game.User.TotalMoneyLost += Bet;  finalResultMessage += "Bust 💥 | "; }
+                else if (dealerScore > 21) { game.User.Balance = game.User.Balance + Bet * 2; game.User.TotalMoneyWon += Bet; finalResultMessage += "Win 🎉 | "; }
+                else if (playerScore > dealerScore) { game.User.Balance = game.User.Balance + Bet * 2; game.User.TotalMoneyWon += Bet; finalResultMessage += "Win 🎉 | "; }
+                else if (dealerScore > playerScore) { game.User.Balance -= Bet; game.User.TotalMoneyLost += Bet; finalResultMessage += "Lose ❌ | "; }
                 else finalResultMessage += "Push 🤝 | ";
                 }
+
+            await _db.SaveChangesAsync();
 
             return finalResultMessage.TrimEnd(' ', '|');
        

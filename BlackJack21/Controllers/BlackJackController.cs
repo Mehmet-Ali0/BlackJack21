@@ -24,11 +24,32 @@ namespace BlackJack21.Controllers
         }
 
 
-        
+        [HttpGet]
         [Route("/")]
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int order)
         {
-            return View();
+            //1 = Net Gain, 2 = TotalWon, 3 = TotalLost
+            var query = _db.Users.AsQueryable();
+
+            
+            if (order == 2)
+            {
+                query = query.OrderByDescending(p => p.TotalMoneyWon);
+            }
+            else if (order == 3)
+            {
+                query = query.OrderByDescending(p => p.TotalMoneyLost);
+            }
+            else 
+            {
+                query = query.OrderByDescending(p => p.TotalMoneyWon - p.TotalMoneyLost);
+            }
+
+            
+            var sortedList = await query.Take(5).ToListAsync();
+
+            return View(sortedList);
+
         }
         
         [Authorize]
@@ -79,12 +100,14 @@ namespace BlackJack21.Controllers
                 else if (playerScore == 21)
                 {
                     user.Balance = user.Balance + Bet * 2;
+                    user.TotalMoneyWon = user.TotalMoneyWon + Bet;
                     TempData["GameResult"] = "🎉 NATURAL BLACKJACK! You win!";
                     balanceChanged = true;
                 }
                 else if (dealerScore == 21)
                 {
                     user.Balance = user.Balance - Bet;
+                    user.TotalMoneyLost = user.TotalMoneyLost + Bet;
                     TempData["GameResult"] = "❌ Dealer Natural 21. You lose.";
                     balanceChanged = true;
 
